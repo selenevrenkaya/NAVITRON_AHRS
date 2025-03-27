@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "circ_buffer.h"
 
 /* USER CODE END Includes */
 
@@ -49,6 +50,15 @@ UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+uint8_t received_buffer[circ_buffer_size];
+
+t_circ_buffer circ_buffer = {	.buffer = received_buffer,
+								.size = circ_buffer_size,
+								.writePos = 0,
+								.readPos = 0
+							};
+
 
 /* USER CODE END PV */
 
