@@ -32,11 +32,11 @@ typedef struct circ_buffer{
 
 
 
-bool circ_buffer_init(tCircBuffer *cbuffer, uint8_t *cb, uint32_t bufferSize);
-uint32_t circ_buffer_length(tCircBuffer *cbuffer);
-bool circ_buffer_write(tCircBuffer *cbuffer, uint8_t *writeBlock, uint32_t blockSize);
-bool circ_buffer_read(tCircBuffer *cbuffer, uint8_t *readBlock, uint32_t blockSize);
-bool circ_buffer_peek(tCircBuffer *cbuffer, uint8_t *destination, uint32_t index);
+bool circ_buffer_init(t_circ_buffer *cbuffer, uint8_t *cb, uint32_t buffer_size);
+uint32_t circ_buffer_length(t_circ_buffer *cbuffer);
+bool circ_buffer_write(t_circ_buffer *cbuffer, uint8_t *writeBlock, uint32_t buffer_size);
+bool circ_buffer_read(t_circ_buffer *cbuffer, uint8_t *readBlock, uint32_t buffer_size);
+bool circ_buffer_peek(t_circ_buffer *cbuffer, uint8_t *destination, uint32_t index);
 
 
 

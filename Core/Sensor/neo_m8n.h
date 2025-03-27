@@ -8,6 +8,9 @@
 #ifndef SENSOR_NEO_M8N_H_
 #define SENSOR_NEO_M8N_H_
 
+#include "circ_buffer.h"
+
+
 
 
 #endif /* SENSOR_NEO_M8N_H_ */

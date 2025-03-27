@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "circ_buffer.h"
+#include "neo_m8n.h"
 
 /* USER CODE END Includes */
 
@@ -55,8 +55,8 @@ uint8_t received_buffer[circ_buffer_size];
 
 t_circ_buffer circ_buffer = {	.buffer = received_buffer,
 								.size = circ_buffer_size,
-								.writePos = 0,
-								.readPos = 0
+								.write_pos = 0,
+								.read_pos = 0
 							};
 
 
