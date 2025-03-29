@@ -10,11 +10,12 @@
 
 
 bool circ_buffer_init(t_circ_buffer *cbuffer, uint8_t *cb, uint32_t buffer_size){
+/*
 	cbuffer->buffer = cb;
 	if (cbuffer->buffer == NULL){
 		return false;
 	}
-
+*/
 	cbuffer->read_pos = 0;
 	cbuffer->write_pos = 0;
 	cbuffer->size = buffer_size;

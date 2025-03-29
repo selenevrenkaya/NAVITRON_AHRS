@@ -9,6 +9,7 @@
 #define COMM_CIRC_BUFFER_H_
 
 #include"stdint.h"
+#include "stdio.h"
 #include"string.h"
 #include"stdbool.h"
 
@@ -18,7 +19,7 @@
 
 
 typedef struct circ_buffer{
-	unsigned char *buffer;
+	unsigned char buffer[circ_buffer_size];
 	uint32_t size;
 	uint32_t read_pos;
 	uint32_t write_pos;

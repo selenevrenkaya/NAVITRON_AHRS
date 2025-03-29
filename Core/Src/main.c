@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -44,20 +45,29 @@
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c3;
 
+SPI_HandleTypeDef hspi1;
+
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
 
-uint8_t received_buffer[circ_buffer_size];
+//uint8_t received_buffer[circ_buffer_size] = { 0 };
 
-t_circ_buffer circ_buffer = {	.buffer = received_buffer,
+t_circ_buffer circ_buffer = {	.buffer = { 0 },
 								.size = circ_buffer_size,
 								.write_pos = 0,
 								.read_pos = 0
 							};
+
+
+t_gps gps_data = {	.cbuffer = &circ_buffer				};
+
+
+
 
 
 /* USER CODE END PV */
@@ -65,17 +75,21 @@ t_circ_buffer circ_buffer = {	.buffer = received_buffer,
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_UART4_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+char serial_buffer[50];
 
 /* USER CODE END 0 */
 
@@ -108,12 +122,19 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_I2C3_Init();
   MX_UART4_Init();
   MX_USART2_UART_Init();
   MX_TIM3_Init();
+  MX_SPI1_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_UARTEx_ReceiveToIdle_IT(&huart4, circ_buffer.buffer, circ_buffer_size);
+
+  //HAL_UARTEx_ReceiveToIdle_DMA(&huart4, received_buffer, circ_buffer_size);
 
   /* USER CODE END 2 */
 
@@ -124,6 +145,39 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  if(gps_data.receive_check == true){
+		  if(check_sentence(&gps_data, "GGA")){
+
+			  if(parse_gps_data(&gps_data, "*", gps_data.gga->received_data)){
+
+				  if(decode_gga(gps_data.gga->received_data, gps_data.gga) == 1){
+
+					  /* for serial */
+					  sprintf(serial_buffer, "%.2f%c, %.2f%c  ", gps_data.gga->location.latitude, gps_data.gga->location.NS,\
+							  gps_data.gga->location.longitude, gps_data.gga->location.EW);
+
+
+		  			  /* writing sd card */
+
+
+				  }
+
+				  if(decode_rmc(gps_data.gga->received_data, gps_data.rmc) == 1){
+
+					  /* for serial */
+					  sprintf(serial_buffer, "%02d:%02d:%02d, %02d%02d%02d", gps_data.gga->time.hour, \
+							  gps_data.gga->time.min, gps_data.gga->time.sec, gps_data.rmc->date.day, \
+							  gps_data.rmc->date.month, gps_data.rmc->date.year);
+
+		  			  /* writing sd card */
+
+
+				  }
+			  }
+		  }
+	  }
+
   }
 
   /* USER CODE END 3 */
@@ -251,6 +305,44 @@ static void MX_I2C3_Init(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief TIM3 Initialization Function
   * @param None
   * @retval None
@@ -325,7 +417,7 @@ static void MX_UART4_Init(void)
 
   /* USER CODE END UART4_Init 1 */
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 115200;
+  huart4.Init.BaudRate = 9600;
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
@@ -376,6 +468,22 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -419,6 +527,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+	gps_data.receive_check = true;
+	gps_data.cbuffer->write_pos = gps_data.cbuffer->size - Size;
+
+	HAL_UARTEx_ReceiveToIdle_IT(&huart4, circ_buffer.buffer, circ_buffer_size);
+
+}
+
 
 /* USER CODE END 4 */
 
