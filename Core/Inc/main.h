@@ -49,8 +49,6 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -59,28 +57,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define USER_BUTTON_Pin GPIO_PIN_13
-#define USER_BUTTON_GPIO_Port GPIOC
-#define USER_LED1_Pin GPIO_PIN_2
-#define USER_LED1_GPIO_Port GPIOC
-#define USER_LED2_Pin GPIO_PIN_3
-#define USER_LED2_GPIO_Port GPIOC
 #define GPS_UART_TX_Pin GPIO_PIN_0
 #define GPS_UART_TX_GPIO_Port GPIOA
 #define GPS_UART_RX_Pin GPIO_PIN_1
 #define GPS_UART_RX_GPIO_Port GPIOA
-#define LCD_USART_TX_Pin GPIO_PIN_2
-#define LCD_USART_TX_GPIO_Port GPIOA
-#define LCD_USART_RX_Pin GPIO_PIN_3
-#define LCD_USART_RX_GPIO_Port GPIOA
-#define MPU9255_SDA_Pin GPIO_PIN_9
-#define MPU9255_SDA_GPIO_Port GPIOC
-#define MPU9255_SCL_Pin GPIO_PIN_8
-#define MPU9255_SCL_GPIO_Port GPIOA
-#define MPU9255_INT_Pin GPIO_PIN_9
-#define MPU9255_INT_GPIO_Port GPIOA
-#define BUZZER_Pin GPIO_PIN_4
-#define BUZZER_GPIO_Port GPIOB
+#define BNO055_SDA_Pin GPIO_PIN_9
+#define BNO055_SDA_GPIO_Port GPIOC
+#define BNO055_SCL_Pin GPIO_PIN_8
+#define BNO055_SCL_GPIO_Port GPIOA
 #define MS5611_SCL_Pin GPIO_PIN_6
 #define MS5611_SCL_GPIO_Port GPIOB
 #define MS5611_SDA_Pin GPIO_PIN_7

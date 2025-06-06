@@ -1,0 +1,15 @@
+../Core/Sensor/Src/bno055.c:38:13:BNO055_Init	16	static
+../Core/Sensor/Src/bno055.c:51:13:BNO055_SetExtClock	40	static
+../Core/Sensor/Src/bno055.c:61:13:BNO055_SetPowerMode	40	static
+../Core/Sensor/Src/bno055.c:71:13:BNO055_SetOperationMode	40	static
+../Core/Sensor/Src/bno055.c:84:13:BNO055_SetCalibration	32	static
+../Core/Sensor/Src/bno055.c:101:13:BNO055_GetCalibration	32	static
+../Core/Sensor/Src/bno055.c:110:13:BNO055_GetAccel	32	static
+../Core/Sensor/Src/bno055.c:118:13:BNO055_GetEuler	32	static
+../Core/Sensor/Src/bno055.c:126:20:BNO055_ProcessAccel	16	static
+../Core/Sensor/Src/bno055.c:135:13:BNO055_Euler2Quaternion	56	static
+../Core/Sensor/Src/bno055.c:161:20:BNO055_ProcessEuler	16	static
+../Core/Sensor/Src/bno055.c:171:13:BNO055_Task	24	static
+../Core/Sensor/Src/bno055.c:299:20:BNO055_SetDelay	16	static
+../Core/Sensor/Src/bno055.c:306:13:BNO055_SetStateNext	16	static
+../Core/Sensor/Src/bno055.c:312:13:BNO055_SetStateDefault	16	static
