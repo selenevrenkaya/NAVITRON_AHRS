@@ -11,6 +11,17 @@
 #include "stdint.h"
 
 
+typedef struct Time{
+	int hour;
+	int min;
+
+	int day;
+	int month;
+	int year;
+
+}tTime;
+
+
 typedef struct NED_Velocity{
 	float north;
 	float east;
@@ -83,6 +94,7 @@ typedef struct AHRS{
 	tTelemetry telemetry;
 	tPosition position;
 	tVelocity velocity;
+	tTime time;
 
 }tAHRS;
 

@@ -26,6 +26,8 @@
 #include "string.h"
 
 #include "bno055.h"
+#include "neo_m8n.h"
+#include "ahrs.h"
 
 /* USER CODE END Includes */
 
@@ -57,6 +59,24 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
+/* GPS */
+t_circ_buffer circ_buffer = {	.buffer = { 0 },
+								.size = circ_buffer_size,
+								.write_pos = 0,
+								.read_pos = 0
+							};
+
+/*
+t_gps_gga gga = { 0 };
+t_gps_rmc rmc = { 0 };
+*/
+
+t_gps gps_data = {	.cbuffer = &circ_buffer				};
+
+unsigned char gga_received[100];
+unsigned char rmc_received[100];
+
+
 /* IMU */
 tBNO055 bno = {0};
 
@@ -82,6 +102,9 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+uint8_t RATE_10Hz[] =  		{0XB5, 0X62, 0X06, 0X08, 0X06, 0X00, 0X64, 0X00, 0X01, 0X00, 0X01, 0X00, 0X7A, 0X12};
+
 
 /* USER CODE END 0 */
 
@@ -128,6 +151,14 @@ int main(void)
 
   HAL_Delay(500);
 
+  /* Configure GPS for data rate */
+  HAL_UART_Transmit(&huart4, RATE_10Hz, 14, 500);
+  HAL_Delay(100);
+
+  if (HAL_UART_GetState(&huart4) == HAL_UART_STATE_READY) {
+	  HAL_UART_Receive_IT(&huart4, gps_data.cbuffer->buffer, circ_buffer_size);
+  }
+
 
   /* USER CODE END 2 */
 
@@ -139,9 +170,53 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+	  if(gps_data.receive_check == true){
+		  if(check_sentence(&gps_data, "GGA")){
+
+			  if(parse_gps_data(&gps_data, '*', gga_received)){
+
+				  if(decode_gga(gga_received, &(gps_data.gga)) == 1){
+
+					  set_ahrs_data(&gps_data, &ahrs);
+					  gps_data.receive_check = false;
+
+					  /* for serial */
+					  /*
+					  sprintf(serial_buffer, "%.2f%c, %.2f%c, %02d:%02d:%02d  ", gps_data.gga->location.latitude, gps_data.gga->location.NS,\
+							  gps_data.gga->location.longitude, gps_data.gga->location.EW, gps_data.gga->time.hour, \
+							  gps_data.gga->time.min, gps_data.gga->time.sec );
+						*/
+
+				  }
+
+			  }
+		  }
+		  else if(check_sentence(&gps_data, "RMC")){
+
+			  if(parse_gps_data(&gps_data, '*', rmc_received)){
+
+				  if(decode_rmc(rmc_received, &(gps_data.rmc)) == 1){
+
+					  set_ahrs_data(&gps_data, &ahrs);
+					  gps_data.receive_check = false;
+
+					  /* for serial */
+					  /*
+					  sprintf(serial_buffer, " %.2f, %.2f, %02d/%02d/%04d ", gps_data.rmc->speed, gps_data.rmc->course, \
+							  gps_data.rmc->date.day, gps_data.rmc->date.month, gps_data.rmc->date.year );
+						*/
+
+				  }
+			  }
+
+		  }
+	  }
+
+
 	  /* IMU Task */
 	  BNO055_Task(&bno, &ahrs);
 
+	  HAL_Delay(80);
   }
 
   /* USER CODE END 3 */
