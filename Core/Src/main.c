@@ -67,6 +67,8 @@ void read_from_sd_card(void);
 void clear_sd_card_file(void);
 void delete_sd_card_file(void);
 
+static void send_data_uart(UART_HandleTypeDef *huart, tAHRS* ahrs, tBNO055* bno);
+
 FATFS FatFs;
 FIL Fil;
 
@@ -248,6 +250,11 @@ int main(void)
 	  /* Extended Kalman Filter */
 	  ekf_task(&gps_data, &ahrs);
 
+	  /* USB Communication */
+	  //sprintf(usb_buffer, " %.2f, %.2f, %.2f ", bno.euler.H, bno.euler.R, bno.euler.P);
+	  //sprintf(usb_buffer, " %.2f, %.2f ", ms5611.temp, ms5611.pressure);
+	  //CDC_Transmit_FS((uint8_t*)usb_buffer, strlen(usb_buffer));
+
 
 	  /* Save AHRS data to SD card */
 	  write_to_sd_card(ahrs.telemetry.head, ahrs.telemetry.roll, ahrs.telemetry.pitch);	// try increasing baud rate
@@ -255,6 +262,7 @@ int main(void)
 
 	  //read_from_sd_card();		/* read if you need for checking */
 
+	  send_data_uart(&huart2, &ahrs, &bno);
 
   }
 
@@ -637,6 +645,21 @@ void delete_sd_card_file(void){
 
 }
 
+
+/* Observe filtering IMU data and GPS position */
+static void send_data_uart(UART_HandleTypeDef *huart, tAHRS* ahrs, tBNO055* bno) {
+    char tx_buffer[150];
+    memset(tx_buffer, '\0', sizeof(tx_buffer));
+
+    snprintf(tx_buffer, sizeof(tx_buffer),
+             "R:%.2f,%.2f,P:%.2f,%.2f,Y:%.2f,%.2f,Lat:%.8f,Lon:%.8f,Q:%.3f,%.3f,%.3f,%.3f\n",
+             bno->eulerf.R, ahrs->telemetry.roll, bno->eulerf.P, ahrs->telemetry.pitch, bno->eulerf.H, ahrs->telemetry.head,
+			 ahrs->position.latitude, ahrs->position.longitude, ahrs->telemetry.q0, ahrs->telemetry.q1,
+			 ahrs->telemetry.q2, ahrs->telemetry.q3);
+
+    HAL_UART_Transmit(huart, (uint8_t*)tx_buffer, strlen(tx_buffer), HAL_MAX_DELAY);
+
+}
 
 
 /* USER CODE END 4 */
