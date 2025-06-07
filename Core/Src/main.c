@@ -29,6 +29,7 @@
 #include "neo_m8n.h"
 #include "ahrs.h"
 #include "ms5611.h"
+#include "ekf.h"
 
 /* USER CODE END Includes */
 
@@ -59,6 +60,15 @@ UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+/* sd card functions */
+static void write_to_sd_card(float head, float roll, float pitch);
+void read_from_sd_card(void);
+void clear_sd_card_file(void);
+void delete_sd_card_file(void);
+
+FATFS FatFs;
+FIL Fil;
 
 /* GPS */
 t_circ_buffer circ_buffer = {	.buffer = { 0 },
@@ -113,6 +123,10 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 uint8_t RATE_10Hz[] =  		{0XB5, 0X62, 0X06, 0X08, 0X06, 0X00, 0X64, 0X00, 0X01, 0X00, 0X01, 0X00, 0X7A, 0X12};
+
+char usb_buffer[100];
+char sd_reading_buffer[500];
+char sd_writing_buffer[100];
 
 
 /* USER CODE END 0 */
@@ -231,7 +245,17 @@ int main(void)
 	  /* IMU Task */
 	  BNO055_Task(&bno, &ahrs);
 
-	  HAL_Delay(78);
+	  /* Extended Kalman Filter */
+	  ekf_task(&gps_data, &ahrs);
+
+
+	  /* Save AHRS data to SD card */
+	  write_to_sd_card(ahrs.telemetry.head, ahrs.telemetry.roll, ahrs.telemetry.pitch);	// try increasing baud rate
+	  //HAL_Delay(78);
+
+	  //read_from_sd_card();		/* read if you need for checking */
+
+
   }
 
   /* USER CODE END 3 */
@@ -522,6 +546,98 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
+/* SD Card Functions */
+static void write_to_sd_card(float head, float roll, float pitch) {
+    FRESULT FR_Status;
+    UINT WWC;  // Write Word Counter
+
+    FR_Status = f_mount(&FatFs, "", 1);
+    if (FR_Status != FR_OK) {
+        return;
+    }
+
+    // Dosyayı açma (her seferinde veri eklemek için append)
+    FR_Status = f_open(&Fil, "ahrs_data.txt", FA_OPEN_APPEND | FA_WRITE);
+    if (FR_Status != FR_OK) {
+        return;
+    }
+
+    // Veri formatı: head, roll, pitch
+    snprintf(sd_writing_buffer, sizeof(sd_writing_buffer), "%.2f, %.2f, %.2f\n", head, roll, pitch);
+
+    // Veriyi dosyaya yaz ve WWC'yi güncelle
+    FR_Status = f_write(&Fil, sd_writing_buffer, strlen(sd_writing_buffer), &WWC);
+    if (FR_Status != FR_OK) {
+        return;
+    }
+
+    // Yazılan byte sayısını WWC ile takip et
+    //printf("Written %d bytes to the file.\n", WWC);
+
+    f_close(&Fil);
+}
+
+
+
+
+void read_from_sd_card(void) {
+    FRESULT FR_Status;
+    UINT RWC;  // Read Word Counter
+
+    // Dosyayı açma
+    FR_Status = f_open(&Fil, "ahrs_data.txt", FA_READ);
+    if (FR_Status != FR_OK) {
+        return;
+    }
+
+    DWORD file_size = f_size(&Fil);
+
+    // Dosyanın sonuna kadar okuma işlemi
+    UINT read_position = 0;
+    while (read_position < file_size) {
+        // Veriyi okuma (WWC kadar)
+        FR_Status = f_read(&Fil, sd_reading_buffer, sizeof(sd_reading_buffer) - 1, &RWC);
+        if (FR_Status != FR_OK) {
+            return;
+        }
+
+        // Eğer okuma işlemi yapılmazsa (dosyanın sonuna geldiyse), çık
+        if (RWC == 0) {
+            break;
+        }
+
+        // Okunan veriyi ekrana yaz
+        sd_reading_buffer[RWC] = '\0';  // Null terminator ekleyelim
+        //printf("Read data: %s\n", sd_reading_buffer);
+
+        read_position += RWC;
+
+        // Eğer okuma işleminden sonra daha fazla veri yoksa çık
+        if (RWC < sizeof(sd_reading_buffer) - 1) {
+            break;
+        }
+
+    }
+
+    f_close(&Fil);
+}
+
+
+
+void delete_sd_card_file(void){
+	FRESULT FR_Status;
+
+	FR_Status = f_unlink("ahrs_data.txt");
+
+	if (FR_Status != FR_OK){
+		return;
+	}
+
+}
+
+
 
 /* USER CODE END 4 */
 
