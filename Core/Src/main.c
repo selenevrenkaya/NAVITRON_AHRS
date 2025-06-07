@@ -28,6 +28,7 @@
 #include "bno055.h"
 #include "neo_m8n.h"
 #include "ahrs.h"
+#include "ms5611.h"
 
 /* USER CODE END Includes */
 
@@ -75,6 +76,14 @@ t_gps gps_data = {	.cbuffer = &circ_buffer				};
 
 unsigned char gga_received[100];
 unsigned char rmc_received[100];
+
+
+/* Barometer */
+t_ms5611 ms5611 = {		.hi2c = &hi2c1,
+						.temp = 0.00,
+						.pressure = 0.00
+
+					};
 
 
 /* IMU */
@@ -146,6 +155,9 @@ int main(void)
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
+  /* init function for barometer */
+  ms5611_init();
+
   /* init function for IMU sensor */
   BNO055_Init(&bno, &hi2c3);
 
@@ -213,10 +225,13 @@ int main(void)
 	  }
 
 
+	  /* Barometer Task */
+	  ms5611_task(&ahrs);
+
 	  /* IMU Task */
 	  BNO055_Task(&bno, &ahrs);
 
-	  HAL_Delay(80);
+	  HAL_Delay(78);
   }
 
   /* USER CODE END 3 */
