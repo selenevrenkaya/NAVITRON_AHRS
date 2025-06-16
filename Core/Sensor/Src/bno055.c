@@ -31,6 +31,8 @@ const static tCalibrationVals calib_data = {
 static uint32_t current_ms, prev_ms = 0;
 static inline void BNO055_SetDelay(tBNO055* bno, uint32_t ms);
 static tI2C_Status BNO055_ProcessAccel(tBNO055* bno);
+static tI2C_Status BNO055_ProcessGyro(tBNO055* bno);
+
 static void BNO055_Euler2Quaternion(tBNO055* bno);
 static tI2C_Status BNO055_ProcessEuler(tBNO055* bno);
 
@@ -115,6 +117,14 @@ tI2C_Status BNO055_GetAccel(tBNO055* bno){
 }
 
 
+tI2C_Status BNO055_GetGyro(tBNO055* bno){
+	if(HAL_OK != HAL_I2C_Mem_Read(bno->hi2c, BNO055_HAL_I2C_ADDR, BNO055_VECTOR_GYROSCOPE, 1, (uint8_t*)(tEuler*)(&(bno->gyro)), BNO055_GYRO_XYZ_DATA_SIZE, 2)){
+		return I2C_FAIL;
+	}
+	return I2C_SUCCESS;
+}
+
+
 tI2C_Status BNO055_GetEuler(tBNO055* bno){
 	if(HAL_OK != HAL_I2C_Mem_Read(bno->hi2c, BNO055_HAL_I2C_ADDR, BNO055_EUL_DATA_H_LSB, 1, (uint8_t*)(tEuler*)(&(bno->euler)), BNO055_EULER_HRP_DATA_SIZE, 2)){
 		return I2C_FAIL;
@@ -127,6 +137,15 @@ static tI2C_Status BNO055_ProcessAccel(tBNO055* bno){
 	bno->accelf.X = (float)bno->accel.X / BNO055_ACCEL_DIV_MSQ;
 	bno->accelf.Y = (float)bno->accel.Y / BNO055_ACCEL_DIV_MSQ;
 	bno->accelf.Z = (float)bno->accel.Z / BNO055_ACCEL_DIV_MSQ;
+
+	return I2C_SUCCESS;
+}
+
+
+static tI2C_Status BNO055_ProcessGyro(tBNO055* bno){
+	bno->gyrof.X = (float)bno->gyro.X / BNO055_GYRO_DIV_DPS;
+	bno->gyrof.Y = (float)bno->gyro.Y / BNO055_GYRO_DIV_DPS;
+	bno->gyrof.Z = (float)bno->gyro.Z / BNO055_GYRO_DIV_DPS;
 
 	return I2C_SUCCESS;
 }
@@ -248,6 +267,19 @@ tI2C_Status BNO055_Task(tBNO055* bno, tAHRS* ahrs){
 
 	}
 
+	else if(state == BNO055_GET_GYRO){
+		ret = BNO055_GetGyro(bno);
+		BNO055_SetDelay(bno, BNO055_TASK_PERIOD);
+
+        if (ret == I2C_SUCCESS){
+    		ret = BNO055_ProcessGyro(bno);
+
+    		if (ret == I2C_SUCCESS)
+    			bno->state++;
+        }
+
+	}
+
 	else if(state == BNO055_GET_EULER){
 		ret = BNO055_GetEuler(bno);
 		BNO055_SetDelay(bno, BNO055_TASK_PERIOD);
@@ -256,6 +288,7 @@ tI2C_Status BNO055_Task(tBNO055* bno, tAHRS* ahrs){
     		ret = BNO055_ProcessEuler(bno);
     		BNO055_Euler2Quaternion(bno);
 
+    		/*
     		ahrs->telemetry.roll = bno->eulerf.R;
     		ahrs->telemetry.pitch = bno->eulerf.P;
     		ahrs->telemetry.head = bno->eulerf.H;
@@ -264,6 +297,7 @@ tI2C_Status BNO055_Task(tBNO055* bno, tAHRS* ahrs){
     		ahrs->telemetry.q1 = bno->quaternion.X;
     		ahrs->telemetry.q2 = bno->quaternion.Y;
     		ahrs->telemetry.q3 = bno->quaternion.Z;
+			*/
 
     		if (ret == I2C_SUCCESS)
     			bno->state = BNO055_GET_ACCEL;

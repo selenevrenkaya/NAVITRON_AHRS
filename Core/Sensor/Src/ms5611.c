@@ -156,8 +156,10 @@ void ms5611_task(tAHRS* ahrs){
 
 /* convert pressure to height info */
 float pressure_2_high(){
-    float height = (T0 / L) * (pow(ms5611.pressure / P0, (1 / 5.255)) - 1);
-    return height;
+    //float height = (T0 / L) * (pow(ms5611.pressure / P0, (1 / 5.255)) - 1);
+	float height = 44330.0f * (1.0f - powf(ms5611.pressure / P0, 0.190284f));
+
+	return height;
 
 }
 

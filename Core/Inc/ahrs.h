@@ -65,9 +65,9 @@ typedef struct Position{
 
 
 typedef struct Telemetry{
-	float roll;	/* euler angles */
+	float head;	/* euler angles */
+	float roll;
 	float pitch;
-	float head;
 
 	float q0;		/* quaternions */
 	float q1;

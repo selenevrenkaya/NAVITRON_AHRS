@@ -31,14 +31,14 @@ typedef struct __attribute__((packed)){
 }tAccelFloat;
 
 typedef struct __attribute__((packed)){
-	int16_t X;
 	int16_t Y;
+	int16_t X;	// x ile y yeri ters
 	int16_t Z;
 }tGyro;
 
 typedef struct __attribute__((packed)){
-	float X;
 	float Y;
+	float X;
 	float Z;
 }tGyroFloat;
 
@@ -183,6 +183,8 @@ typedef struct __attribute__ ((packed)){
 #define BNO055_ACCEL_DATA_X_MSB 		(0x09)
 #define BNO055_ACCEL_DATA_X_LSB 		(0x08)
 
+#define BNO055_VECTOR_GYROSCOPE			(0x14)
+
 
 typedef enum __attribute__((packed)) BNO055_PowerMode
 {
@@ -218,7 +220,7 @@ typedef enum __attribute__((packed)) BNO055_Task_States
 	BNO055_SET_OPERATION_MODE,
 
 	BNO055_GET_ACCEL,
-
+	BNO055_GET_GYRO,
 	BNO055_GET_EULER,
 
 	BNO055_SET_LnRESET,
@@ -234,6 +236,7 @@ typedef struct BNO055{
 	tAccel accel;
 	tAccelFloat accelf;
 	tGyro gyro;
+	tGyroFloat gyrof;
 	tEuler euler;
 	tEulerFloat eulerf;
 	tQuaternion quaternion;
@@ -257,6 +260,7 @@ tI2C_Status __BNO055_GetCalibration(tBNO055* bno);
 tI2C_Status BNO055_SetCalibration(tBNO055* bno);
 tI2C_Status BNO055_GetCalibration(tBNO055* bno);
 tI2C_Status BNO055_GetAccel(tBNO055* bno);
+tI2C_Status BNO055_GetGyro(tBNO055* bno);
 tI2C_Status BNO055_GetEuler(tBNO055* bno);
 
 /* BNO State update functions */

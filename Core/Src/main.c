@@ -31,6 +31,7 @@
 #include "ms5611.h"
 #include "ekf.h"
 
+//#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -248,11 +249,12 @@ int main(void)
 	  BNO055_Task(&bno, &ahrs);
 
 	  /* Extended Kalman Filter */
-	  ekf_task(&gps_data, &ahrs);
+	  ekf_task(&gps_data, &bno, &ahrs);
+
 
 	  /* USB Communication */
 	  //sprintf(usb_buffer, " %.2f, %.2f, %.2f ", bno.euler.H, bno.euler.R, bno.euler.P);
-	  //sprintf(usb_buffer, " %.2f, %.2f ", ms5611.temp, ms5611.pressure);
+	  //sprintf(usb_buffer, " %.2f, %.2f ", bno.eulerf.R, ahrs.telemetry.roll);
 	  //CDC_Transmit_FS((uint8_t*)usb_buffer, strlen(usb_buffer));
 
 
@@ -262,7 +264,7 @@ int main(void)
 
 	  //read_from_sd_card();		/* read if you need for checking */
 
-	  send_data_uart(&huart2, &ahrs, &bno);
+	  //send_data_uart(&huart2, &ahrs, &bno);
 
   }
 
@@ -294,7 +296,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 90;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 5;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {

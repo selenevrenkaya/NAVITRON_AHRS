@@ -21,7 +21,7 @@
 /* for calculating height */
 #define T0 	288.15    // Temel sıcaklık (K)
 #define L 	0.0065     // Sıcaklık gradyanı (K/m)
-#define P0 	1013.25   // Deniz seviyesindeki basınç (mbar)
+#define P0 	1006 // Deniz seviyesindeki basınç (mbar)
 #define c 	287.05     // Gaz sabiti (J/(kg·K))
 #define g 	9.80665    // Yerçekimi ivmesi (m/s²)
 #define M 	0.0289644  // Havadan kütle (kg/mol)
